@@ -180,10 +180,8 @@ class RugCheckAPI {
   // Get Token Insider Graph
   async getTokenInsiderGraph(tokenId: string): Promise<RugCheckTokenInsiderGraphResponse> {
     try {
-      // Check authentication before making the request
-      if (!this.isAuthenticated()) {
-        throw new Error('Authentication required to access token insider graph');
-      }
+     
+
       
       const response = await axios.get(
         `${BASE_URL}/tokens/${tokenId}/insiders/graph`,

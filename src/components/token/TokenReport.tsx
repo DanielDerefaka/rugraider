@@ -6,6 +6,7 @@ import { RiskScore } from './RiskScore';
 import { RiskIndicator } from './RiskIndicator';
 import { formatAddress, formatDate, formatTokenAmount } from '@/lib/utils';
 import { useTokenAnalysis } from '@/contexts/TokenAnalysisContext';
+import Image from 'next/image';
 
 interface TokenReportProps {
   report: TokenReport;
@@ -59,7 +60,9 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
           {/* Token logo */}
           <div className="w-12 h-12 mr-4 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-700">
             {report.metadata.logoURI ? (
-              <img
+              <Image
+              width={50}
+              height={50}
                 src={report.metadata.logoURI}
                 alt={report.metadata.symbol || 'Token'}
                 className="object-cover w-full h-full"

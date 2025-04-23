@@ -4,6 +4,8 @@ const nextConfig = {
 
   webpack: (config) => {
     // This is necessary for the @solana packages to work
+
+
     config.resolve.fallback = {
       fs: false,
       path: false,
@@ -18,8 +20,18 @@ const nextConfig = {
     RUGCHECK_API_URL: process.env.RUGCHECK_API_URL || 'https://api.rugcheck.xyz/v1',
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
-
-
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
+  },
 
   typescript: {
     // Ignoring TypeScript errors during build
