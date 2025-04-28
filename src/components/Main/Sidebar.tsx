@@ -119,8 +119,8 @@ export function AppSidebar() {
             <Shield className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">SolGuard</h2>
-            <p className="text-xs text-muted-foreground">Solana Security Dashboard</p>
+            <h2 className="font-semibold text-foreground">SolGuardPro</h2>
+            <p className="text-xs text-muted-foreground">Tokens Risk Dashboard</p>
           </div>
         </div>
 
@@ -234,11 +234,11 @@ export function AppSidebar() {
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarFallback>D</AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium text-foreground">User Account</p>
-              <p className="text-xs text-muted-foreground">user@example.com</p>
+              <p className="text-sm font-medium text-foreground"> Daniel Dere</p>
+              <p className="text-xs text-muted-foreground">davidderedx2@gmail.com</p>
             </div>
           </div>
           <Button variant="ghost" size="icon">

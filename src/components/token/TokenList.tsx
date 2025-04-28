@@ -191,13 +191,10 @@ export const TokenList: React.FC<TokenListProps> = ({
                 <Image
                 width={20}
                 height={20}
-                  src={token.logoURI || "/placeholder.svg"}
+                  src={token.logoURI }
                   alt={token.symbol || "Token"}
                   className="object-cover w-full h-full"
-                  onError={(e) => {
-                    ;(e.target as HTMLImageElement).src =
-                      "https://placehold.co/40x40/gray/white?text=" + (token.symbol || "?").charAt(0)
-                  }}
+                  
                 />
               ) : (
                 <div className="flex items-center justify-center w-full h-full text-lg font-bold text-gray-500">

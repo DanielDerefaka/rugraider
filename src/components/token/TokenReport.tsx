@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TokenReport, TokenRiskFactor } from '@/types/token';
 import { RiskScore } from './RiskScore';
 import { RiskIndicator } from './RiskIndicator';
 import { formatAddress, formatDate, formatTokenAmount } from '@/lib/utils';
 import { useTokenAnalysis } from '@/contexts/TokenAnalysisContext';
 import Image from 'next/image';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 interface TokenReportProps {
   report: TokenReport;
@@ -18,27 +19,69 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
   isLoading = false,
 }) => {
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useTokenAnalysis();
+  const { addNotification } = useNotifications();
+  const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
   // Handle watchlist toggle
   const handleWatchlistToggle = () => {
-    const tokenAddress = report.metadata.address;
-    
-    if (isInWatchlist(tokenAddress)) {
-      removeFromWatchlist(tokenAddress);
-    } else {
-      addToWatchlist(tokenAddress, {
-        mint: tokenAddress,
-        owner: '',
-        amount: '0',
-        decimals: report.metadata.decimals,
-        uiAmount: 0,
-        symbol: report.metadata.symbol,
-        name: report.metadata.name,
-        logoURI: report.metadata.logoURI,
-        riskScore: report.riskScore.score,
-        riskLevel: report.riskScore.level,
+    try {
+      const tokenAddress = report.metadata.address;
+      
+      if (isInWatchlist(tokenAddress)) {
+        removeFromWatchlist(tokenAddress);
+        addNotification({
+          type: 'system',
+          title: 'Removed from Watchlist',
+          message: `${report.metadata.symbol} has been removed from your watchlist`,
+          priority: 'low',
+        });
+      } else {
+        addToWatchlist(tokenAddress, {
+          mint: tokenAddress,
+          owner: '',
+          amount: '0',
+          decimals: report.metadata.decimals,
+          uiAmount: 0,
+          symbol: report.metadata.symbol,
+          name: report.metadata.name,
+          logoURI: report.metadata.logoURI,
+          riskScore: report.riskScore.score,
+          riskLevel: report.riskScore.level,
+        });
+        addNotification({
+          type: 'system',
+          title: 'Added to Watchlist',
+          message: `${report.metadata.symbol} has been added to your watchlist`,
+          priority: 'low',
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling watchlist:', error);
+      addNotification({
+        type: 'system',
+        title: 'Watchlist Error',
+        message: 'Failed to update watchlist',
+        priority: 'medium',
       });
     }
+  };
+
+  // Handle copy to clipboard
+  const handleCopyAddress = (address: string, type: 'token' | 'deployer') => {
+    navigator.clipboard.writeText(address)
+      .then(() => {
+        setCopySuccess(type);
+        setTimeout(() => setCopySuccess(null), 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy address:', err);
+        addNotification({
+          type: 'system',
+          title: 'Copy Failed',
+          message: 'Failed to copy address to clipboard',
+          priority: 'low',
+        });
+      });
   };
 
   if (isLoading) {
@@ -61,8 +104,8 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
           <div className="w-12 h-12 mr-4 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-700">
             {report.metadata.logoURI ? (
               <Image
-              width={50}
-              height={50}
+                width={50}
+                height={50}
                 src={report.metadata.logoURI}
                 alt={report.metadata.symbol || 'Token'}
                 className="object-cover w-full h-full"
@@ -92,16 +135,25 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
                 </span>
               )}
             </h2>
-            <div className="mt-1 text-sm text-gray-500">
+            <div className="mt-1 text-sm text-gray-500 flex items-center">
               {formatAddress(report.metadata.address, 8)}
               <button 
-                className="ml-2 text-primary-600 hover:text-primary-700"
-                onClick={() => navigator.clipboard.writeText(report.metadata.address)}
+                className="ml-2 text-primary-600 hover:text-primary-700 flex items-center"
+                onClick={() => handleCopyAddress(report.metadata.address, 'token')}
                 title="Copy address"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
+                {copySuccess === 'token' ? (
+                  <span className="text-green-500 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Copied
+                  </span>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>
@@ -137,6 +189,25 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
         </div>
       </div>
       
+      {/* Alert for high risk tokens */}
+      {(report.riskScore.level === 'high' || report.riskScore.level === 'critical') && (
+        <div className="p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-700 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-400">High Risk Token Warning</h3>
+              <div className="mt-1 text-sm text-red-700 dark:text-red-300">
+                <p>This token has been identified as high risk. Exercise extreme caution before investing.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Token metadata */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="p-4 bg-white border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
@@ -153,6 +224,17 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
           <p className="mt-1 text-lg font-semibold">
             {report.creationDate ? formatDate(new Date(report.creationDate).getTime() / 1000) : 'Unknown'}
           </p>
+          {report.creationDate && (
+            <p className="mt-1 text-xs text-gray-500">
+              {new Date(report.creationDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </p>
+          )}
         </div>
         
         <div className="p-4 bg-white border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
@@ -160,6 +242,14 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
           <p className="mt-1 text-lg font-semibold">
             {report.holders ? report.holders.toLocaleString() : 'Unknown'}
           </p>
+          {report.holders > 0 && (
+            <p className="mt-1 text-xs text-gray-500">
+              {report.holders < 10 && 'Very few holders - potential concentration risk'}
+              {report.holders >= 10 && report.holders < 100 && 'Limited holder distribution'}
+              {report.holders >= 100 && report.holders < 1000 && 'Moderate holder distribution'}
+              {report.holders >= 1000 && 'Wide holder distribution'}
+            </p>
+          )}
         </div>
       </div>
       
@@ -206,25 +296,48 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
               <span className="text-gray-500">Address:</span>
               <span className="ml-2 font-mono text-sm">{formatAddress(report.deployerAddress, 12)}</span>
               <button 
-                className="ml-2 text-primary-600 hover:text-primary-700"
-                onClick={() => navigator.clipboard.writeText(report.deployerAddress)}
+                className="ml-2 text-primary-600 hover:text-primary-700 flex items-center"
+                onClick={() => handleCopyAddress(report.deployerAddress, 'deployer')}
                 title="Copy address"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
+                {copySuccess === 'deployer' ? (
+                  <span className="text-green-500 flex items-center text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Copied
+                  </span>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
               </button>
             </div>
-            <p className="mt-2">
+            <div className="mt-4 flex space-x-2">
               <a 
                 href={`https://solscan.io/account/${report.deployerAddress}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700"
+                className="text-primary-600 hover:text-primary-700 bg-primary-50 px-3 py-1 rounded-md text-sm flex items-center dark:bg-primary-900/20"
               >
-                View deployer history on Solscan
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Solscan
               </a>
-            </p>
+              <a 
+                href={`https://solana.fm/address/${report.deployerAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 bg-primary-50 px-3 py-1 rounded-md text-sm flex items-center dark:bg-primary-900/20"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Solana FM
+              </a>
+            </div>
           </div>
         </div>
       )}
@@ -234,10 +347,42 @@ export const TokenReportComponent: React.FC<TokenReportProps> = ({
 
 // Risk factor item component
 const RiskFactorItem: React.FC<{ factor: TokenRiskFactor }> = ({ factor }) => {
-  const [expanded, setExpanded] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(factor.severity === 'high' || factor.severity === 'critical');
+  
+  // Generate border color based on severity
+  const getBorderColor = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return 'border-red-500 dark:border-red-700';
+      case 'high':
+        return 'border-orange-500 dark:border-orange-700';
+      case 'medium':
+        return 'border-yellow-500 dark:border-yellow-700';
+      case 'low':
+        return 'border-green-500 dark:border-green-700';
+      default:
+        return 'border-gray-300 dark:border-gray-600';
+    }
+  };
+  
+  // Generate background color based on severity
+  const getBackgroundColor = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return 'bg-red-50 dark:bg-red-900/10';
+      case 'high':
+        return 'bg-orange-50 dark:bg-orange-900/10';
+      case 'medium':
+        return 'bg-yellow-50 dark:bg-yellow-900/10';
+      case 'low':
+        return 'bg-green-50 dark:bg-green-900/10';
+      default:
+        return 'bg-white dark:bg-gray-800';
+    }
+  };
   
   return (
-    <div className="p-4 border rounded-lg">
+    <div className={`p-4 border-l-4 rounded-lg ${getBorderColor(factor.severity)} ${getBackgroundColor(factor.severity)}`}>
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center">
@@ -252,6 +397,8 @@ const RiskFactorItem: React.FC<{ factor: TokenRiskFactor }> = ({ factor }) => {
           <button
             className="p-1 text-gray-500 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
             onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+            aria-label={expanded ? "Collapse details" : "Expand details"}
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
@@ -268,7 +415,7 @@ const RiskFactorItem: React.FC<{ factor: TokenRiskFactor }> = ({ factor }) => {
       
       {/* Expanded details */}
       {expanded && (
-        <div className="mt-3 pt-3 border-t">
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
           {factor.evidence && (
             <div className="mb-2">
               <h5 className="text-sm font-medium text-gray-500">Evidence</h5>

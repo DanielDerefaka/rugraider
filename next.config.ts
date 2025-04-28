@@ -21,6 +21,8 @@ const nextConfig = {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
   images: {
+    loader: 'custom',
+    loaderFile: './my-image-loader.ts',
     remotePatterns: [
       {
         protocol: 'https',

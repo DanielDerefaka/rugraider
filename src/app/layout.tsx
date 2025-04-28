@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./provider";
 import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
+import TokenApiDebugger from "@/RugcheckDebugger";
 
 const lufga = localFont({
   src: [
@@ -47,6 +48,9 @@ export default function RootLayout({
         <ThemeProvider disableTransitionOnChange attribute="class" defaultTheme="system" enableSystem>
           <Providers>
             {children}
+            {process.env.NODE_ENV === 'development' && (
+      <TokenApiDebugger />
+    )}
           </Providers>
         </ThemeProvider>
       </body>

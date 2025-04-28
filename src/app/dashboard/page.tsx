@@ -38,10 +38,7 @@ export default function Dashboard() {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="mt-1 text-muted-foreground">Monitor your wallet security and analyze token risks</p>
-      </div>
+      
 
       {/* Overview cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -184,77 +181,7 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
-
-          {/* Trending tokens */}
-          <Card>
-            <CardHeader className="pb-3 border-b border-border/40">
-              <CardTitle className="text-foreground">Trending Tokens</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              {isLoadingTrending ? (
-                <div className="space-y-3">
-                  {Array(5)
-                    .fill(0)
-                    .map((_, i) => (
-                      <div key={i} className="flex items-center animate-pulse">
-                        <div className="h-8 w-8 rounded-full bg-muted"></div>
-                        <div className="ml-3 flex-1">
-                          <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
-                          <div className="h-3 bg-muted rounded w-3/4"></div>
-                        </div>
-                        <div className="h-6 w-6 bg-muted rounded-full"></div>
-                      </div>
-                    ))}
-                </div>
-              ) : trendingTokens.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No trending tokens available</p>
-              ) : (
-                <div className="space-y-3">
-                  {trendingTokens.map((token) => (
-                    <div
-                      key={token.id}
-                      className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors border ${
-                        selectedToken === token.address
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted/50"
-                      }`}
-                      onClick={() => handleSelectToken(token.address)}
-                    >
-                      <div className="flex-shrink-0 h-8 w-8 mr-3">
-                        {token.logoURI ? (
-                          <Image
-                            src={token.logoURI || "/placeholder.svg"}
-                            alt={token.symbol}
-                            width={32}
-                            height={32}
-                            className="h-full w-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-full w-full rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium">
-                            {token.symbol?.[0] || "?"}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium truncate text-foreground">{token.symbol}</div>
-                        <div className="text-xs text-muted-foreground truncate">{formatAddress(token.address)}</div>
-                      </div>
-                      <div className="ml-3">
-                        <RiskScore
-                          score={token.riskScore}
-                          level={(token.riskLevel?.toLowerCase() || "medium") as any}
-                          size="sm"
-                          showLabel={false}
-                          showBadge={false}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+</div>
 
         {/* Right panel - Token details */}
         <div className="lg:col-span-2">

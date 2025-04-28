@@ -1,7 +1,7 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import {
   RugCheckAuthResponse,
-  RugCheckVerifyRequest,
   RugCheckVerifyResponse,
   RugCheckTokenReportResponse,
   RugCheckTokenInsiderGraphResponse,
@@ -10,267 +10,392 @@ import {
   RugCheckLeaderboardResponse
 } from '@/types/rugcheck';
 
-const BASE_URL = process.env.NEXT_PUBLIC_RUGCHECK_API_URL || 'https://api.rugcheck.xyz/v1';
+// Use environment variable or fallback to default URL
+const BASE_URL = process.env.RUGCHECK_API_URL || 'https://api.rugcheck.xyz/v1';
+
+// Maximum retry attempts for API calls
+const MAX_RETRIES = 3;
+
+// Define retry-able status codes
+const RETRY_STATUS_CODES = [408, 429, 500, 502, 503, 504];
 
 class RugCheckAPI {
   private jwt: string | null = null;
-  
-  // Check if we're running on the client
   private isClient = typeof window !== 'undefined';
-  
+  private logger = {
+    info: (message: string, ...args: any[]) => {
+      console.info(`[RugCheckAPI Info] ${message}`, ...args);
+    },
+    error: (message: string, error: any) => {
+      console.error(`[RugCheckAPI Error] ${message}`, error?.message || error);
+    },
+    warn: (message: string, ...args: any[]) => {
+      console.warn(`[RugCheckAPI Warning] ${message}`, ...args);
+    },
+    debug: (message: string, ...args: any[]) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.debug(`[RugCheckAPI Debug] ${message}`, ...args);
+      }
+    }
+  };
+
   constructor() {
-    // Load token from localStorage on client side
     if (this.isClient) {
-      this.jwt = localStorage.getItem('rugcheck_jwt');
+      try {
+        this.jwt = localStorage.getItem('rugcheck_jwt');
+        this.logger.debug('Initialized RugCheckAPI client');
+        
+        if (this.jwt) {
+          try {
+            const decoded: { exp: number } = jwtDecode(this.jwt);
+            if (decoded.exp * 1000 <= Date.now()) {
+              this.logger.warn('JWT token expired, clearing');
+              this.clearToken();
+            } else {
+              this.logger.debug('Retrieved valid JWT from localStorage');
+            }
+          } catch (error) {
+            this.logger.warn('Invalid JWT in localStorage, clearing', error);
+            this.clearToken();
+          }
+        }
+      } catch (e) {
+        // Handle localStorage access errors (e.g., in private browsing mode)
+        this.logger.warn('Could not access localStorage', e);
+      }
+    } else {
+      this.logger.debug('Initialized RugCheckAPI server');
     }
+
+    // Add request interceptor for automatic retry
+    axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const config = error.config;
+        
+        // Only retry the request if we haven't already tried too many times
+        // and if the status code is one we want to retry
+        if (
+          config && 
+          (!config.retryAttempt || config.retryAttempt < MAX_RETRIES) &&
+          error.response && 
+          RETRY_STATUS_CODES.includes(error.response.status)
+        ) {
+          config.retryAttempt = config.retryAttempt ? config.retryAttempt + 1 : 1;
+          
+          const delay = Math.min(1000 * (2 ** config.retryAttempt), 10000);
+          this.logger.warn(`Retrying request to ${config.url} (attempt ${config.retryAttempt}/${MAX_RETRIES}) after ${delay}ms`);
+          
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, delay));
+          
+          return axios(config);
+        }
+        
+        return Promise.reject(error);
+      }
+    );
   }
-  
-  // Set JWT token after authentication
+
   setToken(token: string) {
+    this.logger.debug('Setting JWT token');
     this.jwt = token;
-    
-    // Store token in localStorage on client side
     if (this.isClient) {
-      localStorage.setItem('rugcheck_jwt', token);
+      try {
+        localStorage.setItem('rugcheck_jwt', token);
+      } catch (e) {
+        this.logger.warn('Could not store JWT in localStorage', e);
+      }
     }
   }
-  
-  // Clear token (logout)
+
   clearToken() {
+    this.logger.debug('Clearing JWT token');
     this.jwt = null;
-    
-    // Remove token from localStorage on client side
     if (this.isClient) {
-      localStorage.removeItem('rugcheck_jwt');
+      try {
+        localStorage.removeItem('rugcheck_jwt');
+      } catch (e) {
+        this.logger.warn('Could not remove JWT from localStorage', e);
+      }
     }
   }
-  
-  // Check if authenticated
+
   isAuthenticated() {
-    return !!this.jwt;
-  }
-  
-  // Get headers with authentication
-  private getHeaders() {
-    return {
-      'Content-Type': 'application/json',
-      ...(this.jwt ? { 'Authorization': `Bearer ${this.jwt}` } : {})
-    };
-  }
-  
-  // Error handler
-  private handleError(error: unknown) {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
+    if (!this.jwt) return false;
+
+    try {
+      const decoded: { exp: number } = jwtDecode(this.jwt);
+      const isValid = decoded.exp * 1000 > Date.now();
       
-      // Handle authentication errors
-      if (axiosError.response?.status === 401) {
+      if (!isValid) {
+        this.logger.warn('Authentication check failed - token expired');
         this.clearToken();
       }
       
-      // Extract error message from response
-      const errorMessage = axiosError.response?.data?.message || axiosError.message;
-      console.error('RugCheck API Error:', errorMessage);
-      
-      throw new Error(`RugCheck API Error: ${errorMessage}`);
+      return isValid;
+    } catch (error) {
+      this.logger.warn('Authentication check failed - invalid token', error);
+      this.clearToken();
+      return false;
     }
-    
-    // For other errors
-    console.error('Unexpected error:', error);
-    throw error;
   }
-  
-  // Authentication with Solana wallet
-  async loginWithSolana(signature: string, message: string, publicKey: string): Promise<RugCheckAuthResponse> {
-    try {
-      console.log("Attempting to authenticate with RugCheck...");
+
+  private getHeaders() {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+
+    if (this.jwt) {
+      headers['Authorization'] = `Bearer ${this.jwt}`;
+    }
+
+    return headers;
+  }
+
+  private handleError(error: unknown, methodName: string): never {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      const status = axiosError.response?.status;
+      const errorMessage = axiosError.response?.data?.message || axiosError.message;
+      const url = axiosError.config?.url || 'unknown URL';
+
+      this.logger.error(`API Error in ${methodName} (${url}) [Status: ${status}]`, errorMessage);
       
-      // The request body matching RugCheck API format
-      const requestBody = {
-        message: {
-          message: message,
-          publicKey: publicKey,
-          timestamp: Math.floor(Date.now() / 1000)
-        },
-        signature: {
-          data: signature,
-          type: "string"
-        },
-        wallet: publicKey
+      // Handle specific error codes
+      if (status === 401) {
+        this.clearToken();
+        throw new Error(`Authentication error: ${errorMessage}`);
+      } else if (status === 404) {
+        throw new Error(`Resource not found: ${errorMessage}`);
+      } else if (status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      } else if (status && status >= 500) {
+        throw new Error(`Server error (${status}). Please try again later.`);
+      } else {
+        throw new Error(`API Error: ${errorMessage}`);
+      }
+    }
+
+    this.logger.error(`Unexpected error in ${methodName}:`, error);
+    throw error instanceof Error ? error : new Error('An unknown error occurred');
+  }
+
+  private async makeRequest<T>(
+    method: 'get' | 'post',
+    endpoint: string, 
+    data?: any, 
+    callerMethod: string,
+    config: AxiosRequestConfig = {}
+  ): Promise<T> {
+    try {
+      this.logger.debug(`Making ${method.toUpperCase()} request to: ${endpoint}`, data);
+      
+      // Add headers to config
+      config.headers = {
+        ...config.headers,
+        ...this.getHeaders()
       };
       
-      console.log("Auth request payload:", JSON.stringify(requestBody, null, 2));
+      // Set timeout for all requests
+      config.timeout = config.timeout || 15000;
       
-      const response = await axios.post(
-        `${BASE_URL}/auth/login/solana`,
-        requestBody,
-        { headers: this.getHeaders() }
-      );
+      const response = method === 'get' 
+        ? await axios.get(`${BASE_URL}${endpoint}`, config)
+        : await axios.post(`${BASE_URL}${endpoint}`, data, config);
       
-      console.log("Auth response:", response.data);
-      
-      if (response.data?.token) {
-        this.setToken(response.data.token);
-        console.log("Authentication successful, token stored");
-      } else {
-        console.warn("Auth response did not contain token:", response.data);
+      this.logger.debug(`Response from ${endpoint}:`, { status: response.status });
+      return response.data;
+    } catch (error) {
+      return this.handleError(error, callerMethod);
+    }
+  }
+
+  async loginWithSolana(signature: string, message: string, publicKey: string): Promise<RugCheckAuthResponse> {
+    try {
+      this.logger.info('Attempting to login with Solana', { publicKey });
+      const response = await axios.post(`${BASE_URL}/auth/login`, {
+        signature,
+        message,
+        publicKey
+      }, { timeout: 20000 }); // Extended timeout for auth
+
+      const authResponse = response.data;
+      this.setToken(authResponse.token);
+      this.logger.info('Login successful', { publicKey });
+      return authResponse;
+    } catch (error) {
+      return this.handleError(error, 'loginWithSolana');
+    }
+  }
+
+  async verifyToken(tokenAddress: string): Promise<RugCheckVerifyResponse> {
+    return this.makeRequest<RugCheckVerifyResponse>(
+      'post',
+      '/tokens/verify',
+      { tokenAddress },
+      'verifyToken'
+    );
+  }
+
+  async checkTokenEligibility(tokenAddress: string): Promise<RugCheckVerifyResponse> {
+    return this.makeRequest<RugCheckVerifyResponse>(
+      'post',
+      '/tokens/verify/eligible',
+      { tokenAddress },
+      'checkTokenEligibility'
+    );
+  }
+
+  async getTokenReport(tokenId: string): Promise<RugCheckTokenReportResponse> {
+    this.logger.debug('Getting token report', { tokenId });
+    try {
+      // Try to get from cache first (if exists)
+      if (this.isClient) {
+        try {
+          const cachedData = sessionStorage.getItem(`token_report:${tokenId}`);
+          if (cachedData) {
+            const { data, timestamp } = JSON.parse(cachedData);
+            // Check if cache is still valid (less than 5 minutes old)
+            if (Date.now() - timestamp < 5 * 60 * 1000) {
+              this.logger.debug('Returning cached token report');
+              return data;
+            }
+          }
+        } catch (e) {
+          this.logger.warn('Error accessing session storage cache', e);
+        }
       }
       
-      return response.data;
-    } catch (error) {
-      console.error("Authentication failed:", error);
-      return this.handleError(error);
-    }
-  }
-  
-  // Token Verification
-  async verifyToken(tokenAddress: string): Promise<RugCheckVerifyResponse> {
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/tokens/verify`,
-        { tokenAddress },
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
-  }
-  
-  // Check token eligibility for verification
-  async checkTokenEligibility(tokenAddress: string): Promise<RugCheckVerifyResponse> {
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/tokens/verify/eligible`,
-        { tokenAddress },
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
-  }
-  
-  // Get Token Report
-  async getTokenReport(tokenId: string): Promise<RugCheckTokenReportResponse> {
-    try {
+      // Fetch from API
       const response = await axios.get(
         `${BASE_URL}/tokens/${tokenId}/report`,
-        { headers: this.getHeaders() }
+        { 
+          headers: this.getHeaders(),
+          timeout: 15000
+        }
       );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
-  }
-  
-  // Get Token Report Summary
-  async getTokenReportSummary(tokenId: string): Promise<RugCheckTokenReportResponse> {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/tokens/${tokenId}/report/summary`,
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
-  }
-  
-  // Get Token Insider Graph
-  async getTokenInsiderGraph(tokenId: string): Promise<RugCheckTokenInsiderGraphResponse> {
-    try {
-     
-
       
-      const response = await axios.get(
-        `${BASE_URL}/tokens/${tokenId}/insiders/graph`,
-        { headers: this.getHeaders() }
-      );
+      // Store in cache
+      if (this.isClient && response.data) {
+        try {
+          sessionStorage.setItem(`token_report:${tokenId}`, JSON.stringify({
+            data: response.data,
+            timestamp: Date.now()
+          }));
+        } catch (e) {
+          this.logger.warn('Error caching token report', e);
+        }
+      }
+      
+      this.logger.debug('Token report retrieved successfully');
       return response.data;
     } catch (error) {
-      return this.handleError(error);
+      return this.handleError(error, 'getTokenReport');
     }
   }
-  
-  // Get New Tokens
+
+  async getTokenReportSummary(tokenId: string): Promise<RugCheckTokenReportResponse> {
+    return this.makeRequest<RugCheckTokenReportResponse>(
+      'get',
+      `/tokens/${tokenId}/report/summary`,
+      undefined,
+      'getTokenReportSummary'
+    );
+  }
+
+  async getTokenInsiderGraph(tokenId: string): Promise<RugCheckTokenInsiderGraphResponse> {
+    return this.makeRequest<RugCheckTokenInsiderGraphResponse>(
+      'get',
+      `/tokens/${tokenId}/insiders/graph`,
+      undefined,
+      'getTokenInsiderGraph',
+      { timeout: 20000 } // Graphs may take longer to generate
+    );
+  }
+
   async getNewTokens(limit: number = 10): Promise<RugCheckStatsNewTokensResponse> {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/stats/new_tokens?limit=${limit}`,
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
+    // Add a cache buster parameter to avoid stale data
+    const cacheBuster = `_cb=${Date.now()}`;
+    return this.makeRequest<RugCheckStatsNewTokensResponse>(
+      'get',
+      `/stats/new_tokens?limit=${limit}&${cacheBuster}`,
+      undefined,
+      'getNewTokens'
+    );
   }
-  
-  // Get Trending Tokens
+
   async getTrendingTokens(limit: number = 10): Promise<RugCheckStatsTrendingTokensResponse> {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/stats/trending?limit=${limit}`,
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
+    // Add a cache buster parameter to avoid stale data
+    const cacheBuster = `_cb=${Date.now()}`;
+    return this.makeRequest<RugCheckStatsTrendingTokensResponse>(
+      'get',
+      `/stats/trending?limit=${limit}&${cacheBuster}`,
+      undefined,
+      'getTrendingTokens'
+    );
   }
-  
-  // Get Recently Verified Tokens
+
   async getVerifiedTokens(limit: number = 10): Promise<RugCheckStatsNewTokensResponse> {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/stats/verified?limit=${limit}`,
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
+    // Add a cache buster parameter to avoid stale data
+    const cacheBuster = `_cb=${Date.now()}`;
+    return this.makeRequest<RugCheckStatsNewTokensResponse>(
+      'get',
+      `/stats/verified?limit=${limit}&${cacheBuster}`,
+      undefined,
+      'getVerifiedTokens'
+    );
   }
-  
-  // Get Leaderboard
+
   async getLeaderboard(limit: number = 10): Promise<RugCheckLeaderboardResponse> {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/leaderboard?limit=${limit}`,
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
+    return this.makeRequest<RugCheckLeaderboardResponse>(
+      'get',
+      `/leaderboard?limit=${limit}`,
+      undefined,
+      'getLeaderboard'
+    );
   }
-  
-  // Get registered domains
+
   async getDomains(limit: number = 10): Promise<any> {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/domains?limit=${limit}`,
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
+    return this.makeRequest<any>(
+      'get',
+      `/domains?limit=${limit}`,
+      undefined,
+      'getDomains'
+    );
   }
-  
-  // Lookup domain address
+
   async lookupDomain(id: string): Promise<any> {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/domains/lookup/${id}`,
-        { headers: this.getHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
+    return this.makeRequest<any>(
+      'get',
+      `/domains/lookup/${id}`,
+      undefined,
+      'lookupDomain'
+    );
+  }
+
+  // Helper method to clear all API caches
+  clearCache() {
+    if (this.isClient) {
+      try {
+        // Get all keys from sessionStorage
+        const keys = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith('token_report:')) {
+            keys.push(key);
+          }
+        }
+        
+        // Remove all cached items
+        keys.forEach(key => sessionStorage.removeItem(key));
+        
+        this.logger.info(`Cleared ${keys.length} items from API cache`);
+      } catch (e) {
+        this.logger.warn('Error clearing API cache', e);
+      }
     }
   }
 }
 
-// Create singleton instance
 export const rugCheckAPI = new RugCheckAPI();

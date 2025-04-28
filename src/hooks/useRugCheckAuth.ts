@@ -12,21 +12,21 @@ export function useRugCheckAuth() {
   const { publicKey, signMessage } = useWallet();
   const { addNotification } = useNotifications();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    // Check if there's a stored token on client side
+    
     if (typeof window !== 'undefined') {
       return !!localStorage.getItem('rugcheck_jwt');
     }
     return false;
   });
 
-  // Mutation for RugCheck login
+
   const loginMutation = useMutation({
     mutationFn: async () => {
       if (!publicKey || !signMessage) {
         throw new Error('Wallet not connected or does not support signing');
       }
 
-      // Create the message to sign
+    
       const message = `Sign-in to Rugcheck.xyz`;
       
       try {

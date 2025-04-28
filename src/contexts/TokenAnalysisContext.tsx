@@ -47,10 +47,10 @@ export const TokenAnalysisProvider = ({ children }: { children: ReactNode }) => 
   
   const { addNotification } = useNotifications();
   
-  // Load saved data from localStorage on client side
+ 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Load watchlist
+   
       const savedWatchlist = localStorage.getItem('watchlist');
       if (savedWatchlist) {
         try {
@@ -60,7 +60,7 @@ export const TokenAnalysisProvider = ({ children }: { children: ReactNode }) => 
         }
       }
       
-      // Load recent tokens
+    
       const savedRecentTokens = localStorage.getItem('recentTokens');
       if (savedRecentTokens) {
         try {

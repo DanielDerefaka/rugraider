@@ -12,15 +12,17 @@ const RPC_ENDPOINTS = [
   // Your current endpoint
   'https://mainnet.helius-rpc.com/?api-key=56ad7ab1-3b24-442a-9141-0b362594dac9',
   
-  // Public RPCs (add these as backups)
-  'https://api.mainnet-beta.solana.com',
-  'https://solana-api.projectserum.com',
-  'https://rpc.ankr.com/solana', 
-  'https://solana-mainnet.rpc.extrnode.com',
+
+];
+
+ // Public RPCs (add these as backups)
+  // 'https://api.mainnet-beta.solana.com',
+  // 'https://solana-api.projectserum.com',
+  // 'https://rpc.ankr.com/solana', 
+  // 'https://solana-mainnet.rpc.extrnode.com',
   
   // Add your Alchemy API if you have one (commented out for now)
   // 'https://solana-mainnet.g.alchemy.com/v2/YOUR_API_KEY',
-];
 
 // Tracking RPC request stats with enhanced metrics
 interface EndpointStats {
