@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useTheme } from "next-themes"
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   AlertCircle,
   BarChart2,
@@ -20,20 +20,20 @@ import {
   Sun,
   Users,
   Wallet,
-} from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 interface NavItemProps {
-  href: string
-  icon: React.ReactNode
-  children: React.ReactNode
-  isActive?: boolean
-  canFavorite?: boolean
-  isFavorite?: boolean
-  onToggleFavorite?: () => void
+  href: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  isActive?: boolean;
+  canFavorite?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
 function NavItem({
@@ -51,7 +51,9 @@ function NavItem({
         href={href}
         className={cn(
           "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-          isActive ? "bg-primary/10 text-primary" : "text-foreground/80 hover:text-foreground hover:bg-muted",
+          isActive
+            ? "bg-primary/10 text-primary"
+            : "text-foreground/80 hover:text-foreground hover:bg-muted"
         )}
       >
         <span className="text-foreground/70">{icon}</span>
@@ -62,25 +64,27 @@ function NavItem({
           onClick={onToggleFavorite}
           className={cn(
             "absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity",
-            isFavorite && "opacity-100 text-amber-500",
+            isFavorite && "opacity-100 text-amber-500"
           )}
         >
           <Star className="h-4 w-4" />
-          <span className="sr-only">{isFavorite ? "Remove from favorites" : "Add to favorites"}</span>
+          <span className="sr-only">
+            {isFavorite ? "Remove from favorites" : "Add to favorites"}
+          </span>
         </button>
       )}
     </div>
-  )
+  );
 }
 
 interface SectionProps {
-  title: string
-  children: React.ReactNode
-  defaultOpen?: boolean
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
 }
 
 function Section({ title, children, defaultOpen = false }: SectionProps) {
-  const [isOpen, setIsOpen] = React.useState(defaultOpen)
+  const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
   return (
     <div className="py-1">
@@ -89,26 +93,33 @@ function Section({ title, children, defaultOpen = false }: SectionProps) {
         className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         {title}
-        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "transform rotate-180")} />
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 transition-transform",
+            isOpen && "transform rotate-180"
+          )}
+        />
       </button>
       {isOpen && <div className="mt-1 space-y-1">{children}</div>}
     </div>
-  )
+  );
 }
 
 export function AppSidebar() {
-  const pathname = usePathname()
-  const { theme, setTheme } = useTheme()
-  const [favorites, setFavorites] = React.useState<string[]>(["/dashboard/tokens"])
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [favorites, setFavorites] = React.useState<string[]>([
+    "/dashboard/tokens",
+  ]);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   const toggleFavorite = (path: string) => {
     if (favorites.includes(path)) {
-      setFavorites(favorites.filter((p) => p !== path))
+      setFavorites(favorites.filter((p) => p !== path));
     } else {
-      setFavorites([...favorites, path])
+      setFavorites([...favorites, path]);
     }
-  }
+  };
 
   return (
     <div className="w-64 h-screen flex flex-col border-r bg-card ">
@@ -119,8 +130,10 @@ export function AppSidebar() {
             <Shield className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">SolGuardPro</h2>
-            <p className="text-xs text-muted-foreground">Tokens Risk Dashboard</p>
+            <h2 className="font-semibold text-foreground">Rug Raider</h2>
+            <p className="text-xs text-muted-foreground">
+              Tokens Risk Dashboard
+            </p>
           </div>
         </div>
 
@@ -133,14 +146,20 @@ export function AppSidebar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <div className="absolute right-2.5 top-2.5 text-xs text-muted-foreground">⌘ K</div>
+          <div className="absolute right-2.5 top-2.5 text-xs text-muted-foreground">
+            ⌘ K
+          </div>
         </div>
       </div>
 
       {/* Navigation */}
       <div className="flex-1 overflow-auto py-2 px-2">
         <div className="space-y-1">
-          <NavItem href="/dashboard" icon={<Home className="h-4 w-4" />} isActive={pathname === "/dashboard"}>
+          <NavItem
+            href="/dashboard"
+            icon={<Home className="h-4 w-4" />}
+            isActive={pathname === "/dashboard"}
+          >
             Dashboard
           </NavItem>
 
@@ -233,12 +252,20 @@ export function AppSidebar() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+              <AvatarImage
+                src="/placeholder.svg?height=32&width=32"
+                alt="User"
+              />
               <AvatarFallback>D</AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium text-foreground"> Daniel Dere</p>
-              <p className="text-xs text-muted-foreground">davidderedx2@gmail.com</p>
+              <p className="text-sm font-medium text-foreground">
+                {" "}
+                Daniel Dere
+              </p>
+              <p className="text-xs text-muted-foreground">
+                davidderedx2@gmail.com
+              </p>
             </div>
           </div>
           <Button variant="ghost" size="icon">
@@ -248,7 +275,9 @@ export function AppSidebar() {
 
         {/* Theme Toggle */}
         <div className="flex items-center justify-between rounded-md border p-2 bg-muted/40">
-          <span className="text-xs font-medium text-muted-foreground">Appearance</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Appearance
+          </span>
           <div className="flex gap-1">
             <Button
               variant={theme === "light" ? "default" : "outline"}
@@ -272,5 +301,5 @@ export function AppSidebar() {
         </div>
       </div>
     </div>
-  )
+  );
 }

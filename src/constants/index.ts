@@ -87,7 +87,7 @@ export const notificationImages = [notification4, notification3, notification2];
 export const companyLogos = [yourlogo, yourlogo, yourlogo, yourlogo, yourlogo];
 
 export const brainwaveServices = [
- "Flag suspicious token approvals instantly",
+  "Flag suspicious token approvals instantly",
   "Analyze risk levels before signing transactions",
   "Collaborate on wallet watchlists with your team",
 ];
@@ -129,7 +129,7 @@ export const roadmap = [
   {
     id: "3",
     title: "Cross-Chain Support",
-    text: "SolGuard will soon protect assets across Ethereum, Solana, and Layer 2 chains",
+    text: "Rug Raider will soon protect assets across Ethereum, Solana, and Layer 2 chains",
     date: "Q1 2026",
     status: "in progress",
     imageUrl: roadmap4,
@@ -137,21 +137,23 @@ export const roadmap = [
 ];
 
 export const collabText =
-  " Built for DAOs, traders, and power users. SolGuard enables collaborative risk defense so your team stays ahead of Solana threats.";
+  " Built for DAOs, traders, and power users. Rug Raider enables collaborative risk defense so your team stays ahead of Solana threats.";
 
 export const collabContent = [
   {
     id: "0",
-    title: "Scan wallets and tokens as a team and flag suspicious behavior in real-time across your network.",
- 
+    title:
+      "Scan wallets and tokens as a team and flag suspicious behavior in real-time across your network.",
   },
   {
     id: "1",
-    title: "Intercept risky approvals with shared AI insights before they happen.",
+    title:
+      "Intercept risky approvals with shared AI insights before they happen.",
   },
   {
     id: "2",
-    title: "Intercept risky approvals with shared AI insights before they happen.",
+    title:
+      "Intercept risky approvals with shared AI insights before they happen.",
   },
 ];
 
@@ -262,7 +264,7 @@ export const benefits = [
   {
     id: "1",
     title: "Scam Detection",
-    text: "Detect scams and rugs on Solana with SolGuard's advanced security features.",
+    text: "Detect scams and rugs on Solana with Rug Raider's advanced security features.",
     backgroundUrl: "./src/assets/benefits/card-2.svg",
     iconUrl: benefitIcon2,
     imageUrl: benefitsol,

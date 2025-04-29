@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { usePathname } from "next/navigation";
 import { disablePageScroll, enablePageScroll } from "scroll-lock";
 
@@ -7,7 +7,7 @@ import Button from "./Button";
 import MenuSvg from "../assets/svg/MenuSvg";
 import { HamburgerMenu } from "./design/Header";
 import { useState } from "react";
-import  pro  from "../../public/PRO.png"
+import pro from "../../public/PRO.png";
 import Image from "next/image";
 const Header = () => {
   const pathname = usePathname();
@@ -37,9 +37,12 @@ const Header = () => {
       }`}
     >
       <div className="flex items-center px-5 lg:px-7.5 xl:px-10 max-lg:py-4">
-        <a className="block w-[12rem] xl:mr-8 flex items-center gap-2 " href="#hero " >
-          <Image src={pro} width={20} height={20} alt="SolGuard" />
-          <h1 className="text-white text-2xl font-bold"> SolGuard</h1>
+        <a
+          className="block w-[12rem] xl:mr-8 flex items-center gap-2 "
+          href="#hero "
+        >
+          <Image src={pro} width={20} height={20} alt="Rug Raider" />
+          <h1 className="text-white text-2xl font-bold"> Rug Raider</h1>
         </a>
 
         <nav
@@ -69,7 +72,6 @@ const Header = () => {
           <HamburgerMenu />
         </nav>
 
-       
         <Button className="hidden lg:flex" href="/dashboard">
           Launch App
         </Button>

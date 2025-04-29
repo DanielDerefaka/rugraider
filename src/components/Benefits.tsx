@@ -9,10 +9,10 @@ import Image from "next/image";
 const Benefits = () => {
   return (
     <Section id="features">
-      <div className="container relative z-2">
+      <div className=" relative z-2">
         <Heading
           className="md:max-w-md lg:max-w-2xl"
-          title="Stay Ahead of Scams & Rugs with SolGuard"
+          title="Stay Ahead of Scams & Rugs with Rug Raider"
         />
 
         <div className="flex flex-wrap gap-10 mb-10">
@@ -35,7 +35,7 @@ const Benefits = () => {
                     alt={item.title}
                   />
                   <p className="ml-auto font-code text-xs font-bold text-n-1 uppercase tracking-wider">
-                     more..
+                    more..
                   </p>
                   <Arrow />
                 </div>

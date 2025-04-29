@@ -8,8 +8,8 @@ import {
   VideoBar,
   VideoChatMessage,
 } from "./design/Services";
-import rug from "../../public/rugsoll.png"
-import scam from "../../public/scam.png"
+import rug from "../../public/rugsoll.png";
+import scam from "../../public/scam.png";
 
 import Generating from "./Generating";
 import Image from "next/image";
@@ -20,7 +20,7 @@ const Services = () => {
       <div className="container">
         <Heading
           title="AI Powered Defense for Onchain Activity"
-          text="SolGuard protects wallets and transactions in real-time using battle-tested detection models."
+          text="Rug Raider protects wallets and transactions in real-time using battle-tested detection models."
         />
 
         <div className="relative">
@@ -29,7 +29,7 @@ const Services = () => {
               <Image
                 className="w-full h-full object-cover md:object-right"
                 width={800}
-                alt="SOLGUARD"
+                alt="Rug Raider"
                 height={730}
                 src={service1}
               />
@@ -38,7 +38,8 @@ const Services = () => {
             <div className="relative z-1 max-w-[17rem] ml-auto">
               <h4 className="h4 mb-4">Smartest AI</h4>
               <p className="body-2 mb-[3rem] text-n-3">
-              Monitor and intercept malicious activity across your wallets, tokens, and transactions before it’s too late.
+                Monitor and intercept malicious activity across your wallets,
+                tokens, and transactions before it’s too late.
               </p>
               <ul className="body-2">
                 {brainwaveServices.map((item, index) => (
@@ -71,8 +72,8 @@ const Services = () => {
               <div className="absolute inset-0 flex flex-col justify-end p-8 bg-gradient-to-b from-n-8/0 to-n-8/90 lg:p-15">
                 <h4 className="h4 mb-4">Scam Detection</h4>
                 <p className="body-2 mb-[3rem] text-n-3">
-                Get instant security insights on tokens, contract&apos;s, and wallet metadata before interacting with them.
-                
+                  Get instant security insights on tokens, contract&apos;s, and
+                  wallet metadata before interacting with them.
                 </p>
               </div>
 
@@ -83,8 +84,8 @@ const Services = () => {
               <div className="py-12 px-4 xl:px-8">
                 <h4 className="h4 mb-4">Simulate Transactions</h4>
                 <p className="body-2 mb-[2rem] text-n-3">
-                Preview the impact of your Solana transaction before confirming 
-                including all hidden instructions.
+                  Preview the impact of your Solana transaction before
+                  confirming including all hidden instructions.
                 </p>
 
                 <ul className="flex items-center justify-between">

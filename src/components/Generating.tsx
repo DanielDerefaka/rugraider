@@ -8,8 +8,14 @@ const Generating = ({ className }) => {
         className || ""
       } text-base`}
     >
-      <Image className="w-5 h-5 mr-4" src={loading} alt="Loading" height={20} width={20} />
-    SolGuard is generating report for you
+      <Image
+        className="w-5 h-5 mr-4"
+        src={loading}
+        alt="Loading"
+        height={20}
+        width={20}
+      />
+      Rug Raider is generating report for you
     </div>
   );
 };

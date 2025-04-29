@@ -4,7 +4,7 @@ import { collabApps, collabContent, collabText } from "../constants";
 import Button from "./Button";
 import Section from "./Section";
 import { LeftCurve, RightCurve } from "./design/Collaboration";
-import mainLogo from "../../public/mainlogo.png"
+import mainLogo from "../../public/mainlogo.png";
 
 const Collaboration = () => {
   return (
@@ -12,7 +12,7 @@ const Collaboration = () => {
       <div className="container lg:flex">
         <div className="max-w-[25rem]">
           <h2 className="h2 mb-4 md:mb-8">
-          AI Powered Defense for Solana Users & Builders
+            AI Powered Defense for Solana Users & Builders
           </h2>
 
           <ul className="max-w-[22rem] mb-10 md:mb-14">
@@ -29,7 +29,7 @@ const Collaboration = () => {
             ))}
           </ul>
 
-          <Button>Launch SolGuard</Button>
+          <Button>Launch Rug Raider</Button>
         </div>
 
         <div className="lg:ml-auto xl:w-[38rem] mt-4">
