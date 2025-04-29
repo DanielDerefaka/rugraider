@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ Rug Raider – Token Risk Detection Dashboard
 
-## Getting Started
+Rug Raider is a **token risk intelligence dashboard** built with Next.js that helps users identify and assess **potentially malicious or high-risk tokens**. It visualizes risk scores, token metadata, wallet exposure, and alerts based on integrated heuristics and security signals.
 
-First, run the development server:
+> Built for the RugCheck bounty – empowering users to avoid scams before it's too late.
 
-```bash
+![Rug Raider Screenshot](./public/image.png)
+
+---
+
+## 🚀 Features
+
+- 🔎 **Wallet Token Scanner**: Detects all tokens held in a given wallet and classifies them by risk (Low, Medium, High).
+- 🧠 **Token Analysis Panel**: Shows detailed risk score, ownership concentration, supply, and creation metadata.
+- 🛡️ **Wallet Security Alert**: Flags wallets with suspicious token exposure.
+- 🔔 **Real-Time Risk Alerts** *(Planned)*: Notifies users of token movements or liquidity events in their wallet.
+- 🌐 **Support for Solana** *(Modular backend-ready)*
+
+---
+
+## 🧰 Tech Stack
+
+- **Frontend**: [Next.js 14](https://nextjs.org), [Tailwind CSS](https://tailwindcss.com)
+- **Design System**: Dark mode dashboard UI with custom risk visualizations
+- **Data**: Integrated with  RugCheck API, Solana RPC endpoints
+- **Deployment**: Vercel-ready for production
+
+---
+
+## 🧪 Getting Started
+
+Clone the project and install dependencies:
+
+\`\`\`bash
+git clone https://github.com/yourusername/rug-raider.git
+cd rug-raider
+npm install
+\`\`\`
+
+Run the development server:
+
+\`\`\`bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+\`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open your browser at [http://localhost:3000](http://localhost:3000) to start exploring the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🧠 Future Roadmap
 
-## Learn More
+- RugCheck API integration (live token risk scores)
+- Wallet connection (Solana wallets)
+- Insider detection using wallet network graph
+- Upcoming Feature Twitter bot for token risk replies
+- Upcoming Rug Raider Extension to intercept transactions 
+- Upcoming Liquidity and transaction alerts
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📄 License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project is open source and available under the [MIT License](LICENSE).
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🙌 Acknowledgments
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [RugCheck.xyz](https://rugcheck.xyz) — for inspiring this project and providing the API ecosystem
+- [Next.js](https://nextjs.org) — for powering the frontend
+- [shadcn/ui](https://ui.shadcn.com) — for clean, accessible components
