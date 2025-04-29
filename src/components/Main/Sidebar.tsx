@@ -8,23 +8,28 @@ import {
   AlertCircle,
   BarChart2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Coins,
   FileText,
   Home,
   Layers,
-  Moon,
-  Search,
-  Settings,
   Shield,
   Star,
   Sun,
+  Moon,
   Users,
   Wallet,
+  X,
+  Search,
+  Settings,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 
 interface NavItemProps {
   href: string;
@@ -105,13 +110,20 @@ function Section({ title, children, defaultOpen = false }: SectionProps) {
   );
 }
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [favorites, setFavorites] = React.useState<string[]>([
     "/dashboard/tokens",
   ]);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const toggleFavorite = (path: string) => {
     if (favorites.includes(path)) {
@@ -121,46 +133,60 @@ export function AppSidebar() {
     }
   };
 
-  return (
-    <div className="w-64 h-screen flex flex-col border-r bg-card ">
+  const toggleSidebar = () => {
+    if (!isMobile) {
+      setIsCollapsed(!isCollapsed);
+    }
+  };
+
+  const sidebarContent = (
+    <>
       {/* Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-8 w-8 rounded-md bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+      <div className={cn("p-4 z-10 border-b", isCollapsed && !isMobile && "p-2")}>
+        {(!isCollapsed || isMobile) ? (
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-8 w-8 rounded-md bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-foreground">Rug Raider</h2>
+              <p className="text-xs text-muted-foreground">
+                Tokens Risk Dashboard
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="h-8 w-8 rounded-md bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mx-auto mb-4">
             <Shield className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h2 className="font-semibold text-foreground">Rug Raider</h2>
-            <p className="text-xs text-muted-foreground">
-              Tokens Risk Dashboard
-            </p>
-          </div>
-        </div>
+        )}
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            className="pl-9 bg-muted/40 border-muted"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <div className="absolute right-2.5 top-2.5 text-xs text-muted-foreground">
-            ⌘ K
+        {(!isCollapsed || isMobile) && (
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              className="pl-9 bg-muted/40 border-muted"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="absolute right-2.5 top-2.5 text-xs text-muted-foreground">
+              ⌘ K
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-auto py-2 px-2">
+      <div className={cn("flex-1 z-10 overflow-auto py-2 px-2", isCollapsed && !isMobile && "px-1")}>
         <div className="space-y-1">
           <NavItem
             href="/dashboard"
             icon={<Home className="h-4 w-4" />}
             isActive={pathname === "/dashboard"}
           >
-            Dashboard
+            {(!isCollapsed || isMobile) && "Dashboard"}
           </NavItem>
 
           <NavItem
@@ -168,89 +194,151 @@ export function AppSidebar() {
             icon={<AlertCircle className="h-4 w-4" />}
             isActive={pathname === "/dashboard/notifications"}
           >
-            Notifications
+            {(!isCollapsed || isMobile) && "Notifications"}
           </NavItem>
         </div>
 
-        <Section title="Analysis" defaultOpen={true}>
-          <NavItem
-            href="/dashboard/tokens"
-            icon={<Coins className="h-4 w-4" />}
-            isActive={pathname === "/dashboard/tokens"}
-            canFavorite
-            isFavorite={favorites.includes("/dashboard/tokens")}
-            onToggleFavorite={() => toggleFavorite("/dashboard/tokens")}
-          >
-            Token Analysis
-          </NavItem>
+        {(!isCollapsed || isMobile) && (
+          <>
+            <Section title="Analysis" defaultOpen={true}>
+              <NavItem
+                href="/dashboard/tokens"
+                icon={<Coins className="h-4 w-4" />}
+                isActive={pathname === "/dashboard/tokens"}
+                canFavorite
+                isFavorite={favorites.includes("/dashboard/tokens")}
+                onToggleFavorite={() => toggleFavorite("/dashboard/tokens")}
+              >
+                Token Analysis
+              </NavItem>
 
-          <NavItem
-            href="/dashboard/wallet"
-            icon={<Wallet className="h-4 w-4" />}
-            isActive={pathname === "/dashboard/wallet"}
-            canFavorite
-            isFavorite={favorites.includes("/dashboard/wallet")}
-            onToggleFavorite={() => toggleFavorite("/dashboard/wallet")}
-          >
-            Wallet Security
-          </NavItem>
+              <NavItem
+                href="/dashboard/wallet"
+                icon={<Wallet className="h-4 w-4" />}
+                isActive={pathname === "/dashboard/wallet"}
+                canFavorite
+                isFavorite={favorites.includes("/dashboard/wallet")}
+                onToggleFavorite={() => toggleFavorite("/dashboard/wallet")}
+              >
+                Wallet Security
+              </NavItem>
 
-          <NavItem
-            href="/dashboard/transactions"
-            icon={<BarChart2 className="h-4 w-4" />}
-            isActive={pathname === "/dashboard/transactions"}
-            canFavorite
-            isFavorite={favorites.includes("/dashboard/transactions")}
-            onToggleFavorite={() => toggleFavorite("/dashboard/transactions")}
-          >
-            Transaction Monitor
-          </NavItem>
+              <NavItem
+                href="/dashboard/transactions"
+                icon={<BarChart2 className="h-4 w-4" />}
+                isActive={pathname === "/dashboard/transactions"}
+                canFavorite
+                isFavorite={favorites.includes("/dashboard/transactions")}
+                onToggleFavorite={() =>
+                  toggleFavorite("/dashboard/transactions")
+                }
+              >
+                Transaction Monitor
+              </NavItem>
 
-          <NavItem
-            href="/dashboard/risk-checker"
-            icon={<Shield className="h-4 w-4" />}
-            isActive={pathname === "/dashboard/risk-checker"}
-            canFavorite
-            isFavorite={favorites.includes("/dashboard/risk-checker")}
-            onToggleFavorite={() => toggleFavorite("/dashboard/risk-checker")}
-          >
-            Risk Checker
-          </NavItem>
-        </Section>
+              <NavItem
+                href="/dashboard/risk-checker"
+                icon={<Shield className="h-4 w-4" />}
+                isActive={pathname === "/dashboard/risk-checker"}
+                canFavorite
+                isFavorite={favorites.includes("/dashboard/risk-checker")}
+                onToggleFavorite={() =>
+                  toggleFavorite("/dashboard/risk-checker")
+                }
+              >
+                Risk Checker
+              </NavItem>
+            </Section>
 
-        <Section title="Resources">
-          <NavItem
-            href="/dashboard/reports"
-            icon={<FileText className="h-4 w-4" />}
-            isActive={pathname === "/dashboard/reports"}
-          >
-            Security Reports
-          </NavItem>
+            <Section title="Resources">
+              <NavItem
+                href="/dashboard/reports"
+                icon={<FileText className="h-4 w-4" />}
+                isActive={pathname === "/dashboard/reports"}
+              >
+                Security Reports
+              </NavItem>
 
-          <NavItem
-            href="/dashboard/templates"
-            icon={<Layers className="h-4 w-4" />}
-            isActive={pathname === "/dashboard/templates"}
-          >
-            Analysis Templates
-          </NavItem>
-        </Section>
+              <NavItem
+                href="/dashboard/templates"
+                icon={<Layers className="h-4 w-4" />}
+                isActive={pathname === "/dashboard/templates"}
+              >
+                Analysis Templates
+              </NavItem>
+            </Section>
 
-        <Section title="Community">
-          <NavItem
-            href="/dashboard/users"
-            icon={<Users className="h-4 w-4" />}
-            isActive={pathname === "/dashboard/users"}
-          >
-            Users
-          </NavItem>
-        </Section>
+            <Section title="Community">
+              <NavItem
+                href="/dashboard/users"
+                icon={<Users className="h-4 w-4" />}
+                isActive={pathname === "/dashboard/users"}
+              >
+                Users
+              </NavItem>
+            </Section>
+          </>
+        )}
       </div>
 
       {/* Footer */}
-      <div className="border-t p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+      <div className={cn("border-t p-4", isCollapsed && !isMobile && "p-2")}>
+        {(!isCollapsed || isMobile) ? (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              
+            <div className="flex gap-1">
+                <Button
+                  variant={theme === "light" ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setTheme("light")}
+                >
+                  <Sun className="h-4 w-4" />
+                  <span className="sr-only">Light mode</span>
+                </Button>
+                <Button
+                  variant={theme === "dark" ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setTheme("dark")}
+                >
+                  <Moon className="h-4 w-4" />
+                  <span className="sr-only">Dark mode</span>
+                </Button>
+              </div>
+              
+            </div>
+
+            {/* Theme Toggle */}
+            <div className="flex items-center justify-between rounded-md border p-2 bg-muted/40">
+              <span className="text-xs font-medium text-muted-foreground">
+                Appearance
+              </span>
+              <div className="flex gap-1">
+                <Button
+                  variant={theme === "light" ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setTheme("light")}
+                >
+                  <Sun className="h-4 w-4" />
+                  <span className="sr-only">Light mode</span>
+                </Button>
+                <Button
+                  variant={theme === "dark" ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setTheme("dark")}
+                >
+                  <Moon className="h-4 w-4" />
+                  <span className="sr-only">Dark mode</span>
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-4">
             <Avatar className="h-8 w-8">
               <AvatarImage
                 src="/placeholder.svg?height=32&width=32"
@@ -258,48 +346,69 @@ export function AppSidebar() {
               />
               <AvatarFallback>D</AvatarFallback>
             </Avatar>
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                {" "}
-                Daniel Dere
-              </p>
-              <p className="text-xs text-muted-foreground">
-                davidderedx2@gmail.com
-              </p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon">
-            <Settings className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Theme Toggle */}
-        <div className="flex items-center justify-between rounded-md border p-2 bg-muted/40">
-          <span className="text-xs font-medium text-muted-foreground">
-            Appearance
-          </span>
-          <div className="flex gap-1">
             <Button
               variant={theme === "light" ? "default" : "outline"}
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={() => setTheme("light")}
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
             >
-              <Sun className="h-4 w-4" />
-              <span className="sr-only">Light mode</span>
-            </Button>
-            <Button
-              variant={theme === "dark" ? "default" : "outline"}
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={() => setTheme("dark")}
-            >
-              <Moon className="h-4 w-4" />
-              <span className="sr-only">Dark mode</span>
+              {theme === "light" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+              <span className="sr-only">Toggle theme</span>
             </Button>
           </div>
-        </div>
+        )}
       </div>
-    </div>
+    </>
+  );
+
+  // For desktop view
+  if (!isMobile) {
+    return (
+      <div
+        className={cn(
+          "h-screen flex flex-col border-r bg-card transition-all duration-300 ease-in-out",
+          isCollapsed ? "w-16" : "w-64"
+        )}
+      >
+        {sidebarContent}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute -right-3 top-1/2 transform -translate-y-1/2 bg-background border rounded-full w-6 h-6 p-0 z-10"
+          onClick={toggleSidebar}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  // For mobile view
+  return (
+    <>
+      <Drawer open={isMobileOpen} onOpenChange={onMobileClose}>
+        <DrawerContent className="h-[95%]">
+          <div className="relative h-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10"
+              onClick={onMobileClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+            {sidebarContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 }
