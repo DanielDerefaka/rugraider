@@ -32,8 +32,8 @@ Rug Raider is a **token risk intelligence dashboard** built with Next.js that he
 Clone the project and install dependencies:
 
 \`\`\`bash
-git clone https://github.com/DanielDerefaka/rug-raider.git
-cd rug-raider
+git clone https://github.com/DanielDerefaka/rugraider.git
+cd rugraider
 npm install
 \`\`\`
 
